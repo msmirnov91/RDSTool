@@ -1,0 +1,21 @@
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
+
+#include "QSettings"
+
+
+/**
+ * @brief The configuration class
+ * works with configuration file ininiformat
+ * keeps program settings
+ */
+class Configuration{
+public:
+    Configuration(QString);
+private:
+    QString inputFileName; /// name of XML
+    QString outputFileName; /// name of output file
+    QString separator; /// will separate name and aritst in output file
+};
+
+#endif // CONFIGURATION_H

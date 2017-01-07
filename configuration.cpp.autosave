@@ -1,0 +1,12 @@
+#include "configuration.h"
+
+Configuration::Configuration(QString configFileName){
+    
+    QSettings settings(configFileName, QSettings::IniFormat);
+    
+    settings.beginGroup("MainSettings");
+    this->inputFileName = settings.value("inputFileName", "").toString();
+    this->outputFileName = settings.value("outputFileName", "").toString();
+    this->separator = settings.value("separator", "").toString();
+    settings.endGroup();
+}
