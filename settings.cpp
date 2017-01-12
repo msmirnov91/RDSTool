@@ -16,9 +16,10 @@ Settings::Settings(QString settingsFileName){
     settings.beginGroup("MainSettings");
     this->inputFileName = settings.value("inputFileName", "cur_playing.xml").toString();
     this->outputFileName = settings.value("outputFileName", "rds.txt").toString();
+    this->outputXmlName = settings.value("outputXmlName", "cur_playing_1251.xml").toString();
     this->metaFileName = settings.value("metaFileName", "meta.txt").toString();
-    this->separator = settings.value("separator", " - ").toString();
-    this->metaSeparator = settings.value("metaSeparator", " - ").toString();
+    this->separator = settings.value("separator", "-").toString();
+    this->metaSeparator = settings.value("metaSeparator", "-").toString();
     settings.endGroup();
 
     // get name of current week day
@@ -62,6 +63,11 @@ QString Settings::getInputFileName(){
 
 QString Settings::getOutputFileName(){
     return this->outputFileName;
+}
+
+
+QString Settings::getOutputXmlName(){
+    return this->outputXmlName;
 }
 
 

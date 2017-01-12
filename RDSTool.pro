@@ -18,9 +18,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     datatranslator.cpp \
-    settings.cpp
+    settings.cpp \
+    xmlhandler.cpp
 
 HEADERS += \
     datatranslator.h \
     settings.h \
-    easylogging++.h
+    easylogging++.h \
+    xmlhandler.h

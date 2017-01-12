@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
         LOG(ERROR) << e.what();
     }
     catch (...){
-        LOG(ERROR) << "PIZDETS! Unknown exception!";
+        LOG(ERROR) << "Unknown exception!";
     }
     return 0;
 }

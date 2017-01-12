@@ -16,6 +16,7 @@ public:
     // getters
     QString getInputFileName();
     QString getOutputFileName();
+    QString getOutputXmlName();
     QString getMetaFileName();
     QString getSeparator();
     QString getMetaSeparator();
@@ -25,6 +26,7 @@ public:
 private:
     QString inputFileName; /// name of XML
     QString outputFileName; /// name of output file
+    QString outputXmlName; /// name of output XML file in another encoding
     QString metaFileName; /// name of meta file
     QString separator; /// will separate name and aritst in output file
     QString metaSeparator; /// separator for metadata

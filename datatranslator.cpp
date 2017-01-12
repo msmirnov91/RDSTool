@@ -1,5 +1,7 @@
 #include "datatranslator.h"
+#include "xmlhandler.h"
 #include "QXmlStreamReader"
+#include "QXmlStreamWriter"
 #include "QFile"
 #include "QByteArray"
 #include "QTextStream"
@@ -16,10 +18,8 @@ DataTranslator::DataTranslator(Settings *set){
     // initialize names and artists with empty string
     this->name = "";
     this->metaName = "";
-    this->nameNotRead = true;
     this->artist = "";
     this->metaArtist = "";
-    this->artistNotRead = true;
 
     // initialize translation map
     this->tMap[L'а'] = "a";
@@ -97,32 +97,14 @@ DataTranslator::DataTranslator(Settings *set){
  * reads name and artist from XML file
  */
 void DataTranslator::readData(){
-    QFile xmlFromGin(this->settings->getInputFileName());
-    if (!xmlFromGin.open(QIODevice::ReadOnly)){ 
-        throw this->settings->getPrefix() + " Can't open input XML!";
-    }
+    XMLHandler handler(this->settings);
 
-    QXmlStreamReader *xmlReader = new QXmlStreamReader(&xmlFromGin);
-    if (xmlReader->hasError()){
-        throw this->settings->getPrefix() + " Input XML has errors!";
-    }
+    this->name = handler.getFirstTagContent("NAME");
+    this->metaName =  this->name;
 
-    //read name and artist from XML
-    while (this->readingDataNotComplete() && !xmlReader->atEnd()){
-        xmlReader->readNext();
-        if (xmlReader->name().toString() == "NAME"){
-            this->name = xmlReader->readElementText();
-            this->metaName =  this->name;
-            this->nameNotRead = false;
-        }
-        if (xmlReader->name().toString() == "ARTIST"){
-            this->artist = xmlReader->readElementText();
-            this->metaArtist = this->artist;
-            this->artistNotRead = false;
-        }
-    }
-    xmlFromGin.close();
-    delete xmlReader;
+    this->artist = handler.getFirstTagContent("ARTIST");
+    this->metaArtist = this->artist;
+
 }
 
 
@@ -142,14 +124,17 @@ void DataTranslator::translate(){
  */
 void DataTranslator::writeData(){
     // write data
-    QString data = this->artist + this->settings->getSeparator()
-                                   + this->name;
+    QString data = this->artist + " " + this->settings->getSeparator()
+                                + " " + this->name;
     this->writeFile(this->settings->getOutputFileName(), data);
 
     // write metadata
-    QString metaData = this->metaArtist + this->settings->getMetaSeparator()
-                                   + this->metaName;
+    QString metaData = this->metaArtist + " " + this->settings->getMetaSeparator()
+                                        + " " + this->metaName;
     this->writeFile(this->settings->getMetaFileName(), metaData);
+
+    XMLHandler handler(this->settings);
+    handler.makeRecodedXml("Windows-1251");
 }
 
 
@@ -161,15 +146,6 @@ bool DataTranslator::translationIsNecessary(){
     bool nameHasRussianLetters = this->hasRussianLetters(this->name);
     bool artistHasRussianLetters = this->hasRussianLetters(this->artist);
     return nameHasRussianLetters || artistHasRussianLetters;
-}
-
-
-/**
- * @brief DataTranslator::readingDataNotComplete
- * @return true, if artist or name were not read yet
- */
-bool DataTranslator::readingDataNotComplete(){
-    return this->nameNotRead || this->artistNotRead;
 }
 
 
@@ -226,4 +202,14 @@ void DataTranslator::writeFile(QString fileName, QString toWrite){
     QTextStream out(&outputFile);
     out << toWrite;
     outputFile.close();
+}
+
+
+/**
+ * @brief DataTranslator::makeRecodedXML
+ * reads data form input xml and immidiatly write it
+ * to new XML in windows-1251
+ */
+void DataTranslator::makeRecodedXML(){
+
 }

@@ -16,6 +16,7 @@ public:
     void readData(); /// read data from gin XML
     void translate(); /// translates data. must be called after readData()
     void writeData(); /// makes translated file with needed data
+    void makeRecodedXML(); /// makes XML in win1251
 
     bool translationIsNecessary(); /// checks name and artist for russian letters
 
@@ -23,9 +24,7 @@ private:
     Settings *settings;
 
     QString name; /// name of song in XML
-    bool nameNotRead; /// need for readingDataNotComplete()
     QString artist; /// name of artist in XML
-    bool artistNotRead;  /// need for readingDataNotComplete()
 
     QString metaName; /// name for meta file
     QString metaArtist; /// artist for meta file
@@ -33,7 +32,6 @@ private:
     typedef std::map<QChar, QString> TranslateMap;
     TranslateMap tMap; /// map used to translate letters
 
-    bool readingDataNotComplete(); /// XML has a lot of NAME and ARTIST tag, so we have to stop parsing after first ARTIST tag
     bool hasRussianLetters(QString); /// detrmines if given string contains russian letters
     QString translateString(QString); /// translates given string from russian to english
     void writeFile(QString, QString); /// writes string to file with given name
