@@ -1,7 +1,4 @@
 #include "datatranslator.h"
-#include "xmlhandler.h"
-#include "QXmlStreamReader"
-#include "QXmlStreamWriter"
 #include "QFile"
 #include "QByteArray"
 #include "QTextStream"
@@ -97,14 +94,15 @@ DataTranslator::DataTranslator(Settings *set){
  * reads name and artist from XML file
  */
 void DataTranslator::readData(){
-    XMLHandler handler(this->settings);
+    this->openReaderStream();
 
-    this->name = handler.getFirstTagContent("NAME");
+    this->name = this->getFirstTagContent("NAME");
     this->metaName =  this->name;
 
-    this->artist = handler.getFirstTagContent("ARTIST");
+    this->artist = this->getFirstTagContent("ARTIST");
     this->metaArtist = this->artist;
 
+    this->closeReaderStream();
 }
 
 
@@ -132,9 +130,6 @@ void DataTranslator::writeData(){
     QString metaData = this->metaArtist + " " + this->settings->getMetaSeparator()
                                         + " " + this->metaName;
     this->writeFile(this->settings->getMetaFileName(), metaData);
-
-    XMLHandler handler(this->settings);
-    handler.makeRecodedXml("Windows-1251");
 }
 
 
@@ -208,8 +203,79 @@ void DataTranslator::writeFile(QString fileName, QString toWrite){
 /**
  * @brief DataTranslator::makeRecodedXML
  * reads data form input xml and immidiatly write it
- * to new XML in windows-1251
+ * to new XML in given encoding
  */
-void DataTranslator::makeRecodedXML(){
+void DataTranslator::makeRecodedXML(const char *codecName){
+    this->openReaderStream();
 
+    // open outputXML file for writing
+    this->outputXML = new QFile(this->settings->getOutputXmlName());
+    if (!this->outputXML->open(QIODevice::WriteOnly)){
+        throw this->settings->getPrefix() + " Can't open output XML!";
+    }
+
+    // initialize writer with opened file and set codec
+    this->writer = new QXmlStreamWriter(this->outputXML);
+    this->writer->setCodec(codecName);
+
+    // write the beginnigng of XML
+    this->reader->readNext();
+    this->writer->writeStartDocument(this->reader->documentVersion().toString());
+
+    // write XML content
+    while (!this->reader->atEnd()){
+        this->reader->readNext();
+        this->writer->writeCurrentToken(*this->reader);
+    }
+
+    // close output file and destroy all created objects
+    this->outputXML->close();
+    delete this->writer;
+    delete this->outputXML;
+    this->closeReaderStream();
+}
+
+/**
+ * @brief DataTranslator::openReaderStream
+ * creates input QFile, opens it and creates QXmlStreamReader
+ */
+void DataTranslator::openReaderStream(){
+    // open XML from GIN
+    this->inputXML = new QFile(this->settings->getInputFileName());
+    if (!this->inputXML->open(QIODevice::ReadOnly)){
+        throw this->settings->getPrefix() + " Can't open input XML!";
+    }
+
+    // initialize reader stream
+    this->reader = new QXmlStreamReader(this->inputXML);
+    if (this->reader->hasError()){
+        throw this->settings->getPrefix() + " Input XML has errors!";
+    }
+}
+
+
+/**
+ * @brief DataTranslator::closeReaderStream
+ * closes xml from GIN and destroyes objects created in openReaderStream
+ */
+void DataTranslator::closeReaderStream(){
+    this->inputXML->close();
+    delete this->reader;
+    delete this->inputXML;
+}
+
+
+/**
+ * @brief DataTranslator::getFirstTagContent
+ * @param tagName name of needed tag
+ * @return content of first tag with given name
+ */
+QString DataTranslator::getFirstTagContent(QString tagName){
+    while (!this->reader->atEnd()){
+        this->reader->readNext();
+        if (this->reader->name().toString() == tagName){
+            return this->reader->readElementText();
+        }
+    }
+    throw this->settings->getPrefix() + " Can't find tag " + tagName.toStdString() + "!";
 }

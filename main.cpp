@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
         }
         if (settingsFromFile.writeAllowed()){
             translator.writeData();
+            translator.makeRecodedXML("Windows-1251");
         }
     }
     catch (std::string str){
