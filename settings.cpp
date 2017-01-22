@@ -1,5 +1,6 @@
 #include "settings.h"
 #include "qdatetime.h"
+#include "QFileInfo"
 #include <exception>
 
 
@@ -14,12 +15,20 @@ Settings::Settings(QString settingsFileName){
 
     // read main settings
     settings.beginGroup("MainSettings");
-    this->inputFileName = settings.value("inputFileName", "cur_playing.xml").toString();
-    this->outputFileName = settings.value("outputFileName", "rds.txt").toString();
-    this->outputXmlName = settings.value("outputXmlName", "cur_playing_1251.xml").toString();
-    this->metaFileName = settings.value("metaFileName", "meta.txt").toString();
-    this->separator = settings.value("separator", "-").toString();
+    this->inputFilePath = settings.value("inputFile", "cur_playing.xml").toString();
+    this->rdsFilePath = settings.value("rdsFile", "rds.txt").toString();
+    this->recodedXmlPath = settings.value("recodedXml", "cur_playing_1251.xml").toString();
+    this->metaFilePath = settings.value("metaFile", "meta.txt").toString();
+    this->rdsSeparator = settings.value("rdsSeparator", "-").toString();
     this->metaSeparator = settings.value("metaSeparator", "-").toString();
+    settings.endGroup();
+
+    // read ftp settings
+    settings.beginGroup("FTPSettings");
+    this->uploadingFilePath = settings.value("fileToSend", "cur_playing.xml").toString();
+    this->rootFtpUrl = settings.value("url", "").toString();
+    this->ftpLogin = settings.value("login", "").toString();
+    this->ftpPassword = settings.value("password", "").toString();
     settings.endGroup();
 
     // get name of current week day
@@ -40,44 +49,44 @@ Settings::Settings(QString settingsFileName){
                  break;
         case 7:  weekDayName = "sun";
                  break;
-        default: throw this->getPrefix() + "QDate is mad!";
+        default: throw this->getErrorPrefix() + "QDate is mad!";
                  break;
     }
 
     // read time settings
     settings.beginGroup("TimeSettings");
-    this->deprecatedHours = settings.value(weekDayName, "none").toString();
+    this->restrictedHoursForToday = settings.value(weekDayName, "none").toString();
     settings.endGroup();
 
     // read exception prefix
     settings.beginGroup("ExceptionPrefix");
-    this->prefix = settings.value("prefix", "").toString();
+    this->errorPrefix = settings.value("prefix", "").toString();
     settings.endGroup();
 }
 
 
-QString Settings::getInputFileName(){
-   return this->inputFileName;
+QString Settings::getInputFilePath(){
+   return this->inputFilePath;
 }
 
 
-QString Settings::getOutputFileName(){
-    return this->outputFileName;
+QString Settings::getRdsFilePath(){
+    return this->rdsFilePath;
 }
 
 
-QString Settings::getOutputXmlName(){
-    return this->outputXmlName;
+QString Settings::getRecodedXmlPath(){
+    return this->recodedXmlPath;
 }
 
 
-QString Settings::getMetaFileName(){
-    return this->metaFileName;
+QString Settings::getMetaFilePath(){
+    return this->metaFilePath;
 }
 
 
-QString Settings::getSeparator(){
-    return this->separator;
+QString Settings::getRdsSeparator(){
+    return this->rdsSeparator;
 }
 
 
@@ -86,8 +95,34 @@ QString Settings::getMetaSeparator(){
 }
 
 
-std::string Settings::getPrefix(){
-    return this->prefix.toStdString();
+QString Settings::getUploadingFilePath(){
+     return this->uploadingFilePath;
+}
+
+
+QString Settings::getRootFtpUrl(){
+    return this->rootFtpUrl;
+}
+
+
+QString Settings::getFtpPath(){
+    QFileInfo uploadingFileInfo(this->uploadingFilePath);
+    return uploadingFileInfo.fileName();
+}
+
+
+QString Settings::getFtpLogin(){
+    return this->ftpLogin;
+}
+
+
+QString Settings::getFtpPassword(){
+    return this->ftpPassword;
+}
+
+
+std::string Settings::getErrorPrefix(){
+    return this->errorPrefix.toStdString();
 }
 
 
@@ -96,13 +131,13 @@ std::string Settings::getPrefix(){
  * checks if output file may be created in current time
  * @return true if file creation is allowed
  */
-bool Settings::writeAllowed(){
+bool Settings::fileCreationAllowed(){
     // get current hour as a string
     QTime now = QTime::currentTime();
     QString currentHour = QString("%1").arg(now.hour());
 
     // search current hour in deprecated for today hours
-    QStringList deprecatedHoursList = this->deprecatedHours.split(" ");
+    QStringList deprecatedHoursList = this->restrictedHoursForToday.split(" ");
     bool result = !deprecatedHoursList.contains(currentHour);
     return result;
 }

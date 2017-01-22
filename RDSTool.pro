@@ -8,6 +8,8 @@ QT       += core
 
 QT       -= gui
 
+QT       += network
+
 TARGET = RDSTool
 CONFIG   += console
 CONFIG   -= app_bundle
@@ -17,10 +19,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    datatranslator.cpp \
-    settings.cpp
+    settings.cpp \
+    datahandler.cpp
 
 HEADERS += \
-    datatranslator.h \
     settings.h \
-    easylogging++.h
+    easylogging++.h \
+    datahandler.h

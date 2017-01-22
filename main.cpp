@@ -1,10 +1,14 @@
-#include "datatranslator.h"
+#include "QCoreApplication"
+#include "datahandler.h"
 #include "settings.h"
 #include "easylogging++.h"
 
 INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char *argv[]){
+    // need for event loop
+    QCoreApplication a(argc, argv);
+
     // configure logger
     el::Configurations defaultConf;
     defaultConf.set(el::Level::Error, el::ConfigurationType::Filename, "errors.log");
@@ -14,17 +18,18 @@ int main(int argc, char *argv[]){
         // initialize settings from chosen file
         Settings settingsFromFile("settings.ini");
 
-        // initialize translator with settings
-        DataTranslator translator(&settingsFromFile);
+        // initialize handler with settings
+        DataHandler handler(&settingsFromFile);
 
-        translator.readData();
-        if (translator.translationIsNecessary()){
-            translator.translate();
+        handler.readInputData();
+        if (handler.translationIsNecessary()){
+            handler.translate();
         }
-        if (settingsFromFile.writeAllowed()){
-            translator.writeData();
-            translator.makeRecodedXML("Windows-1251");
+        if (settingsFromFile.fileCreationAllowed()){
+            handler.createOutputFiles();
+            handler.createRecodedXML("Windows-1251");
         }
+        handler.uploadFileViaFtp();
     }
     catch (std::string str){
         LOG(ERROR) << str;

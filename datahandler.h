@@ -9,17 +9,18 @@
 #include <map>
 
 /**
- * @brief The DataTranslator class
+ * @brief The DataHandler class
  * Class that makes all needed manipulations with data
  */
-class DataTranslator{
+class DataHandler{
 public:
-    DataTranslator(Settings*);
+    DataHandler(Settings*);
 
-    void readData(); /// read data from gin XML
+    void readInputData(); /// read data from gin XML
     void translate(); /// translates data. must be called after readData()
-    void writeData(); /// makes translated file with needed data
-    void makeRecodedXML(const char *); /// makes XML in win1251
+    void createOutputFiles(); /// makes translated file with needed data
+    void createRecodedXML(const char *); /// makes XML in win1251
+    void uploadFileViaFtp();
 
     bool translationIsNecessary(); /// checks name and artist for russian letters
 
@@ -43,7 +44,7 @@ private:
 
     bool hasRussianLetters(QString); /// detrmines if given string contains russian letters
     QString translateString(QString); /// translates given string from russian to english
-    void writeFile(QString, QString); /// writes string to file with given name
+    void writeStringToFile(QString, QString); /// writes string to file with given name
 
     void openReaderStream(); /// opens file and initializes XmlReader with it; here are a lot of "new's"
     void closeReaderStream(); /// closes file; here are all "delete's" for "new's" from openReaderStream

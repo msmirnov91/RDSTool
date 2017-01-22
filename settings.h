@@ -14,26 +14,42 @@ public:
     Settings(QString);
 
     // getters
-    QString getInputFileName();
-    QString getOutputFileName();
-    QString getOutputXmlName();
-    QString getMetaFileName();
-    QString getSeparator();
+    QString getInputFilePath();
+    QString getRdsFilePath();
+    QString getRecodedXmlPath();
+    QString getMetaFilePath();
+    QString getRdsSeparator();
     QString getMetaSeparator();
-    std::string getPrefix();
 
-    bool writeAllowed(); /// checks if file may be changed in current time
+    QString getUploadingFilePath();
+    QString getRootFtpUrl();
+    QString getFtpPath();
+    QString getFtpLogin();
+    QString getFtpPassword();
+
+    std::string getErrorPrefix();
+
+    bool fileCreationAllowed(); /// checks if file may be changed in current time
+    bool uploadAllowed();
+
 private:
-    QString inputFileName; /// name of XML
-    QString outputFileName; /// name of output file
-    QString outputXmlName; /// name of output XML file in another encoding
-    QString metaFileName; /// name of meta file
-    QString separator; /// will separate name and aritst in output file
+    // main settings
+    QString inputFilePath; /// name of XML
+    QString rdsFilePath; /// name of output file
+    QString recodedXmlPath; /// name of output XML file in another encoding
+    QString metaFilePath; /// name of meta file
+    QString rdsSeparator; /// will separate name and aritst in output file
     QString metaSeparator; /// separator for metadata
 
-    QString deprecatedHours; /// contains string with hours when file creation is not allowed separated by space
+    // FTP settings
+    QString uploadingFilePath; /// name of file that must be uploaded via FTP
+    QString rootFtpUrl;
+    QString ftpLogin;
+    QString ftpPassword;
 
-    QString prefix; /// smth with what the exception message must begin
+    // various settings
+    QString restrictedHoursForToday; /// contains string with hours when file creation is not allowed separated by space
+    QString errorPrefix; /// smth with what the exception message must begin
 };
 
 #endif // CONFIGURATION_H
