@@ -2,6 +2,7 @@
 #include "QFile"
 #include "QByteArray"
 #include "QTextStream"
+#include "QRegExp"
 #include "QEventLoop"
 #include <QtNetwork>
 #include <exception>
@@ -125,12 +126,12 @@ void DataHandler::translate(){
 void DataHandler::createOutputFiles(){
     // write data
     QString data = this->artist + " " + this->settings->getRdsSeparator()
-                                + " " + this->name;
+                                                      + " " + this->name;
     this->writeStringToFile(this->settings->getRdsFilePath(), data);
 
     // write metadata
-    QString metaData = this->metaArtist + " " + this->settings->getMetaSeparator()
-                                        + " " + this->metaName;
+    QString metaData = this->metaArtist+ " "
+            + this->settings->getMetaSeparator() + " " + this->metaName;
     this->writeStringToFile(this->settings->getMetaFilePath(), metaData);
 }
 
@@ -140,9 +141,9 @@ void DataHandler::createOutputFiles(){
  * @return true, if name or artist has russian letters,
  */
 bool DataHandler::translationIsNecessary(){
-    bool nameHasRussianLetters = this->hasRussianLetters(this->name);
-    bool artistHasRussianLetters = this->hasRussianLetters(this->artist);
-    return nameHasRussianLetters || artistHasRussianLetters;
+    bool result = this->hasRussianLetters(this->name)
+                  || this->hasRussianLetters(this->artist);
+    return result;
 }
 
 
@@ -152,14 +153,13 @@ bool DataHandler::translationIsNecessary(){
  * @return true, if str has russian letters
  */
 bool DataHandler::hasRussianLetters(QString str){
-    bool result = false;
-    for (int i = 0; i < str.size(); i++){
-        if (this->tMap.find(str[i]) != this->tMap.end()) {
-            result = true;
-            break;
-        }
+    QRegExp oneOrMoreRussianLetters("[а-яёА-ЯЁ]");
+    if (oneOrMoreRussianLetters.indexIn(str) == -1){
+        return false;
     }
-    return result;
+    else{
+        return true;
+    }
 }
 
 
