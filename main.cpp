@@ -15,20 +15,14 @@ int main(int argc, char *argv[]){
     el::Loggers::reconfigureLogger("default", defaultConf);
 
     try{      
-        // initialize settings from chosen file
         Settings settingsFromFile("settings.ini");
-
-        // initialize handler with settings
         DataHandler handler(&settingsFromFile);
 
         handler.readInputData();
         if (handler.translationIsNecessary()){
             handler.translate();
         }
-        if (settingsFromFile.fileCreationAllowed()){
-            handler.createOutputFiles();
-            handler.createRecodedXML("Windows-1251");
-        }
+        handler.createOutputFiles();
         handler.uploadFileViaFtp();
     }
     catch (std::string str){

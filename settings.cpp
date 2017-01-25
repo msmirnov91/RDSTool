@@ -25,7 +25,8 @@ Settings::Settings(QString settingsFileName){
 
     // read ftp settings
     settings.beginGroup("FTPSettings");
-    this->uploadingFilePath = settings.value("fileToSend", "cur_playing.xml").toString();
+    this->doUpload = settings.value("doUpload", "true").toString();
+    this->uploadingFilePath = settings.value("fileToUpload", "cur_playing.xml").toString();
     this->rootFtpUrl = settings.value("url", "").toString();
     this->ftpLogin = settings.value("login", "").toString();
     this->ftpPassword = settings.value("password", "").toString();
@@ -107,7 +108,8 @@ QString Settings::getRootFtpUrl(){
 
 QString Settings::getFtpPath(){
     QFileInfo uploadingFileInfo(this->uploadingFilePath);
-    return uploadingFileInfo.fileName();
+    //FIXME!!
+    return "/" + uploadingFileInfo.fileName();
 }
 
 
@@ -126,18 +128,17 @@ std::string Settings::getErrorPrefix(){
 }
 
 
-/**
- * @brief Settings::writeAllowed
- * checks if output file may be created in current time
- * @return true if file creation is allowed
- */
-bool Settings::fileCreationAllowed(){
+bool Settings::fileCreationProhibited(){
     // get current hour as a string
     QTime now = QTime::currentTime();
     QString currentHour = QString("%1").arg(now.hour());
 
     // search current hour in deprecated for today hours
     QStringList deprecatedHoursList = this->restrictedHoursForToday.split(" ");
-    bool result = !deprecatedHoursList.contains(currentHour);
-    return result;
+    return deprecatedHoursList.contains(currentHour);
+}
+
+
+bool Settings::uploadProhibited(){
+    return this->doUpload.toLower() == "false";
 }

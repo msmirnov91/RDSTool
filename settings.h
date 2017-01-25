@@ -4,16 +4,10 @@
 #include "QSettings"
 
 
-/**
- * @brief The configuration class
- * works with configuration file ininiformat
- * keeps program settings
- */
 class Settings{
 public:
     Settings(QString);
 
-    // getters
     QString getInputFilePath();
     QString getRdsFilePath();
     QString getRecodedXmlPath();
@@ -29,27 +23,28 @@ public:
 
     std::string getErrorPrefix();
 
-    bool fileCreationAllowed(); /// checks if file may be changed in current time
-    bool uploadAllowed();
+    bool fileCreationProhibited(); /// checks if file may be changed in current time
+    bool uploadProhibited();
 
 private:
     // main settings
-    QString inputFilePath; /// name of XML
-    QString rdsFilePath; /// name of output file
-    QString recodedXmlPath; /// name of output XML file in another encoding
-    QString metaFilePath; /// name of meta file
-    QString rdsSeparator; /// will separate name and aritst in output file
-    QString metaSeparator; /// separator for metadata
+    QString inputFilePath;
+    QString rdsFilePath;
+    QString recodedXmlPath;
+    QString metaFilePath;
+    QString rdsSeparator;
+    QString metaSeparator;
 
     // FTP settings
-    QString uploadingFilePath; /// name of file that must be uploaded via FTP
+    QString doUpload;
+    QString uploadingFilePath;
     QString rootFtpUrl;
     QString ftpLogin;
     QString ftpPassword;
 
     // various settings
-    QString restrictedHoursForToday; /// contains string with hours when file creation is not allowed separated by space
-    QString errorPrefix; /// smth with what the exception message must begin
+    QString restrictedHoursForToday;
+    QString errorPrefix;
 };
 
 #endif // CONFIGURATION_H

@@ -8,20 +8,14 @@
 #include <exception>
 
 
-/**
- * @brief DataTranslator::DataTranslator
- * @param set - program settings
- */
 DataHandler::DataHandler(Settings *set){
     this->settings = set;
 
-    // initialize names and artists with empty string
     this->name = "";
     this->metaName = "";
     this->artist = "";
     this->metaArtist = "";
 
-    // initialize translation map
     this->tMap[L'а'] = "a";
     this->tMap[L'б'] = "b";
     this->tMap[L'в'] = "v";
@@ -92,10 +86,6 @@ DataHandler::DataHandler(Settings *set){
 }
 
 
-/**
- * @brief DataTranslator::readData
- * reads name and artist from XML file
- */
 void DataHandler::readInputData(){
     this->openReaderStream();
 
@@ -109,37 +99,28 @@ void DataHandler::readInputData(){
 }
 
 
-/**
- * @brief DataTranslator::translate
- * translates name and artist
- */
 void DataHandler::translate(){
     this->name = this->translateString(this->name);
     this->artist = this->translateString(this->artist);
 }
 
 
-/**
- * @brief DataTranslator::createOutputFiles
- * writes name and artist in output file.
- */
 void DataHandler::createOutputFiles(){
-    // write data
+    if (this->settings->fileCreationProhibited()){
+        return;
+    }
     QString data = this->artist + " " + this->settings->getRdsSeparator()
                                                       + " " + this->name;
     this->writeStringToFile(this->settings->getRdsFilePath(), data);
 
-    // write metadata
     QString metaData = this->metaArtist+ " "
             + this->settings->getMetaSeparator() + " " + this->metaName;
     this->writeStringToFile(this->settings->getMetaFilePath(), metaData);
+
+    this->createRecodedXML("Windows-1251");
 }
 
 
-/**
- * @brief DataTranslator::translationIsNecessary
- * @return true, if name or artist has russian letters,
- */
 bool DataHandler::translationIsNecessary(){
     bool result = this->hasRussianLetters(this->name)
                   || this->hasRussianLetters(this->artist);
@@ -147,11 +128,6 @@ bool DataHandler::translationIsNecessary(){
 }
 
 
-/**
- * @brief DataTranslator::hasRussianLetters
- * @param str - string that must be checked
- * @return true, if str has russian letters
- */
 bool DataHandler::hasRussianLetters(QString str){
     QRegExp oneOrMoreRussianLetters("[а-яёА-ЯЁ]");
     if (oneOrMoreRussianLetters.indexIn(str) == -1){
@@ -163,11 +139,6 @@ bool DataHandler::hasRussianLetters(QString str){
 }
 
 
-/**
- * @brief DataTranslator::translateString
- * @param str string that must be translated
- * @return translated string
- */
 QString DataHandler::translateString(QString str){
     QString result = "";
     TranslateMap::iterator it;
@@ -184,12 +155,6 @@ QString DataHandler::translateString(QString str){
 }
 
 
-/**
- * @brief DataTranslator::writeStringToFile
- * writes given string to file with given name
- * @param fileName name of file to write
- * @param toWrite string that must be written
- */
 void DataHandler::writeStringToFile(QString fileName, QString toWrite){
     QFile outputFile(fileName);
     if (!outputFile.open(QIODevice::WriteOnly)){
@@ -202,53 +167,38 @@ void DataHandler::writeStringToFile(QString fileName, QString toWrite){
 }
 
 
-/**
- * @brief DataTranslator::createRecodedXML
- * reads data form input xml and immidiatly write it
- * to new XML in given encoding
- */
 void DataHandler::createRecodedXML(const char *codecName){
     this->openReaderStream();
 
-    // open outputXML file for writing
-    this->outputXML = new QFile(this->settings->getRecodedXmlPath());
-    if (!this->outputXML->open(QIODevice::WriteOnly)){
+    this->recodedXML = new QFile(this->settings->getRecodedXmlPath());
+    if (!this->recodedXML->open(QIODevice::WriteOnly)){
         throw this->settings->getErrorPrefix() + " Can't open output XML!";
     }
 
-    // initialize writer with opened file and set codec
-    this->writer = new QXmlStreamWriter(this->outputXML);
+    this->writer = new QXmlStreamWriter(this->recodedXML);
     this->writer->setCodec(codecName);
 
-    // write the beginnigng of XML
     this->reader->readNext();
     this->writer->writeStartDocument(this->reader->documentVersion().toString());
 
-    // write XML content
     while (!this->reader->atEnd()){
         this->reader->readNext();
         this->writer->writeCurrentToken(*this->reader);
     }
 
-    // close output file and destroy all created objects
-    this->outputXML->close();
+    this->recodedXML->close();
     delete this->writer;
-    delete this->outputXML;
+    delete this->recodedXML;
     this->closeReaderStream();
 }
 
-/**
- * @brief DataTranslator::openReaderStream
- * creates input QFile, opens it and creates QXmlStreamReader
- */
+
 void DataHandler::openReaderStream(){
-    // open XML from GIN
     this->inputXML = new QFile(this->settings->getInputFilePath());
     if (!this->inputXML->open(QIODevice::ReadOnly)){
         throw this->settings->getErrorPrefix() + " Can't open input XML!";
     }
 
-    // initialize reader stream
     this->reader = new QXmlStreamReader(this->inputXML);
     if (this->reader->hasError()){
         throw this->settings->getErrorPrefix() + " Input XML has errors!";
@@ -256,10 +206,6 @@ void DataHandler::openReaderStream(){
 }
 
 
-/**
- * @brief DataTranslator::closeReaderStream
- * closes xml from GIN and destroyes objects created in openReaderStream
- */
 void DataHandler::closeReaderStream(){
     this->inputXML->close();
     delete this->reader;
@@ -267,11 +213,6 @@ void DataHandler::closeReaderStream(){
 }
 
 
-/**
- * @brief DataTranslator::getFirstTagContent
- * @param tagName name of needed tag
- * @return content of first tag with given name
- */
 QString DataHandler::getFirstTagContent(QString tagName){
     while (!this->reader->atEnd()){
         this->reader->readNext();
@@ -285,6 +226,10 @@ QString DataHandler::getFirstTagContent(QString tagName){
 
 
 void DataHandler::uploadFileViaFtp(){
+    if (this->settings->uploadProhibited()){
+        return;
+    }
+
     QUrl uploadUrl(this->settings->getRootFtpUrl());
     uploadUrl.setPath(this->settings->getFtpPath());
     uploadUrl.setUserName(this->settings->getFtpLogin());
@@ -307,6 +252,7 @@ void DataHandler::uploadFileViaFtp(){
         QObject::connect(uploadReply, SIGNAL(finished()),
                          &synchronizationLoop, SLOT(quit()));
         synchronizationLoop.exec();
+        uploadingFile->close();
     }
     else{
         throw this->settings->getErrorPrefix() + " Can't open file for FTP transfer!";
