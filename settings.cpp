@@ -1,6 +1,7 @@
 #include "settings.h"
 #include "qdatetime.h"
 #include "QFileInfo"
+#include "QDebug"
 #include <exception>
 
 
@@ -10,7 +11,7 @@
  * @param settingsFileName name of file contains stored settings
  */
 Settings::Settings(QString settingsFileName){
-
+    qDebug() << "initialize settings";
     QSettings settings(settingsFileName, QSettings::IniFormat);
 
     // read main settings
@@ -18,6 +19,7 @@ Settings::Settings(QString settingsFileName){
     this->inputFilePath = settings.value("inputFile", "cur_playing.xml").toString();
     this->rdsFilePath = settings.value("rdsFile", "rds.txt").toString();
     this->recodedXmlPath = settings.value("recodedXml", "cur_playing_1251.xml").toString();
+    this->recodedXmlEncoding = settings.value("recodedXmlEncoding", "Windows-1251").toString();
     this->metaFilePath = settings.value("metaFile", "meta.txt").toString();
     this->rdsSeparator = settings.value("rdsSeparator", "-").toString();
     this->metaSeparator = settings.value("metaSeparator", "-").toString();
@@ -32,9 +34,23 @@ Settings::Settings(QString settingsFileName){
     this->ftpPassword = settings.value("password", "").toString();
     settings.endGroup();
 
-    // get name of current week day
+    QString weekDayName = this->getCurrentWeekDayName();
+    // read time settings
+    settings.beginGroup("TimeSettings");
+    this->restrictedHoursForToday = settings.value(weekDayName, "none").toString();
+    settings.endGroup();
+
+    // read exception prefix
+    settings.beginGroup("ExceptionPrefix");
+    this->errorPrefix = settings.value("prefix", "").toString();
+    settings.endGroup();
+}
+
+
+QString  Settings::getCurrentWeekDayName(){
     QDate today = QDate::currentDate();
     QString weekDayName = "";
+
     switch (today.dayOfWeek()){
         case 1:  weekDayName = "mon";
                  break;
@@ -53,16 +69,7 @@ Settings::Settings(QString settingsFileName){
         default: throw this->getErrorPrefix() + "QDate is mad!";
                  break;
     }
-
-    // read time settings
-    settings.beginGroup("TimeSettings");
-    this->restrictedHoursForToday = settings.value(weekDayName, "none").toString();
-    settings.endGroup();
-
-    // read exception prefix
-    settings.beginGroup("ExceptionPrefix");
-    this->errorPrefix = settings.value("prefix", "").toString();
-    settings.endGroup();
+    return weekDayName;
 }
 
 
@@ -78,6 +85,17 @@ QString Settings::getRdsFilePath(){
 
 QString Settings::getRecodedXmlPath(){
     return this->recodedXmlPath;
+}
+
+
+const char* Settings::getRecodedXmlEncoding(){
+    int resultLength = this->recodedXmlEncoding.length() + 1;
+    char* cString = new char[resultLength];
+
+    cString = strcpy(cString, this->recodedXmlEncoding.toStdString().c_str());
+    cString[resultLength] = '\0';
+
+    return cString;
 }
 
 
@@ -108,7 +126,6 @@ QString Settings::getRootFtpUrl(){
 
 QString Settings::getFtpPath(){
     QFileInfo uploadingFileInfo(this->uploadingFilePath);
-    //FIXME!!
     return "/" + uploadingFileInfo.fileName();
 }
 
@@ -128,14 +145,15 @@ std::string Settings::getErrorPrefix(){
 }
 
 
-bool Settings::fileCreationProhibited(){
-    // get current hour as a string
-    QTime now = QTime::currentTime();
-    QString currentHour = QString("%1").arg(now.hour());
-
-    // search current hour in deprecated for today hours
+bool Settings::executionProhibited(){
     QStringList deprecatedHoursList = this->restrictedHoursForToday.split(" ");
-    return deprecatedHoursList.contains(currentHour);
+    return deprecatedHoursList.contains(this->getCurrentHour());
+}
+
+
+QString Settings::getCurrentHour(){
+    QTime now = QTime::currentTime();
+    return QString("%1").arg(now.hour());
 }
 
 

@@ -16,7 +16,7 @@ public:
     void readInputData();
     void translate();
     void createOutputFiles();
-    void createRecodedXML(const char *);
+    void createRecodedXML();
     void uploadFileViaFtp();
 
     bool translationIsNecessary();
@@ -27,25 +27,34 @@ private:
     QFile *inputXML;
     QFile *recodedXML;
 
-    QXmlStreamReader *reader;
-    QXmlStreamWriter *writer;
-
-    QString name;
-    QString artist;
-
-    QString metaName;
-    QString metaArtist;
-
-    typedef std::map<QChar, QString> TranslateMap;
-    TranslateMap tMap;
-
+    void tryToOpenFile(QFile*, QIODevice::OpenMode);
+    QString getFirstTagContent(QString);
     bool hasRussianLetters(QString);
     QString translateString(QString);
     void writeStringToFile(QString, QString);
 
+    QXmlStreamReader *reader;
+    QXmlStreamWriter *writer;
     void openReaderStream();
     void closeReaderStream();
-    QString getFirstTagContent(QString);
+    void writeRecodedXmlBeginning();
+    void writeRecodedXmlContent();
+
+    typedef std::map<QChar, QString> TranslateMap;
+    TranslateMap tMap;
+
+    QString name;
+    QString artist;
+    QString createRdsFileContent();
+    void createRdsFile();
+
+    QString metaName;
+    QString metaArtist;
+    QString createMetaFileContent();
+    void createMetaFile();
+
+    QUrl createUploadUrl();
+    void doSynchronousUpload(QFile*, QUrl);
 };
 
 #endif // DATATRANSLATOR_H

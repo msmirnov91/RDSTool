@@ -3,12 +3,14 @@
 #include "QByteArray"
 #include "QTextStream"
 #include "QRegExp"
+#include "QTimer"
 #include "QEventLoop"
 #include <QtNetwork>
 #include <exception>
 
 
 DataHandler::DataHandler(Settings *set){
+    qDebug() << "initialize dataHandler";
     this->settings = set;
 
     this->name = "";
@@ -87,6 +89,7 @@ DataHandler::DataHandler(Settings *set){
 
 
 void DataHandler::readInputData(){
+    qDebug() << "parse input XML";
     this->openReaderStream();
 
     this->name = this->getFirstTagContent("NAME");
@@ -96,35 +99,49 @@ void DataHandler::readInputData(){
     this->metaArtist = this->artist;
 
     this->closeReaderStream();
+    qDebug() << "parsed successfully";
 }
 
 
-void DataHandler::translate(){
-    this->name = this->translateString(this->name);
-    this->artist = this->translateString(this->artist);
-}
+void DataHandler::openReaderStream(){
+    this->inputXML = new QFile(this->settings->getInputFilePath());
+    this->tryToOpenFile(this->inputXML, QIODevice::ReadOnly);
 
-
-void DataHandler::createOutputFiles(){
-    if (this->settings->fileCreationProhibited()){
-        return;
+    this->reader = new QXmlStreamReader(this->inputXML);
+    if (this->reader->hasError()){
+        throw this->settings->getErrorPrefix() + " Input XML has errors!";
     }
-    QString data = this->artist + " " + this->settings->getRdsSeparator()
-                                                      + " " + this->name;
-    this->writeStringToFile(this->settings->getRdsFilePath(), data);
+}
 
-    QString metaData = this->metaArtist+ " "
-            + this->settings->getMetaSeparator() + " " + this->metaName;
-    this->writeStringToFile(this->settings->getMetaFilePath(), metaData);
 
-    this->createRecodedXML("Windows-1251");
+QString DataHandler::getFirstTagContent(QString tagName){
+    while (!this->reader->atEnd()){
+        this->reader->readNext();
+        if (this->reader->name().toString() == tagName){
+            return this->reader->readElementText();
+        }
+    }
+    throw this->settings->getErrorPrefix() + " Can't find tag "
+                                      + tagName.toStdString() + "!";
+}
+
+
+void DataHandler::closeReaderStream(){
+    this->inputXML->close();
+    delete this->reader;
+    delete this->inputXML;
+}
+
+
+void DataHandler::tryToOpenFile(QFile* file, QIODevice::OpenMode mode){
+    if (!file->open(mode)){
+        throw this->settings->getErrorPrefix() + " Can't open  " + file->fileName().toStdString();
+    }
 }
 
 
 bool DataHandler::translationIsNecessary(){
-    bool result = this->hasRussianLetters(this->name)
-                  || this->hasRussianLetters(this->artist);
-    return result;
+    return this->hasRussianLetters(this->name) || this->hasRussianLetters(this->artist);
 }
 
 
@@ -136,6 +153,13 @@ bool DataHandler::hasRussianLetters(QString str){
     else{
         return true;
     }
+}
+
+
+void DataHandler::translate(){
+    qDebug() << "translating...";
+    this->name = this->translateString(this->name);
+    this->artist = this->translateString(this->artist);
 }
 
 
@@ -155,73 +179,82 @@ QString DataHandler::translateString(QString str){
 }
 
 
-void DataHandler::writeStringToFile(QString fileName, QString toWrite){
-    QFile outputFile(fileName);
-    if (!outputFile.open(QIODevice::WriteOnly)){
-        std::string which = fileName.toStdString();
-        throw this->settings->getErrorPrefix() + " Cant open output file " + which + "!";
-    }
-    QTextStream out(&outputFile);
-    out << toWrite;
-    outputFile.close();
+void DataHandler::createOutputFiles(){
+    this->createRdsFile();
+    this->createMetaFile();
+    this->createRecodedXML();
 }
 
 
-void DataHandler::createRecodedXML(const char *codecName){
+void DataHandler::createRdsFile(){
+    QString rdsContent = this->createRdsFileContent();
+    this->writeStringToFile(this->settings->getRdsFilePath(), rdsContent);
+}
+
+
+void DataHandler::createMetaFile(){
+    QString metaContent = this->createMetaFileContent();
+    this->writeStringToFile(this->settings->getMetaFilePath(), metaContent);
+}
+
+
+QString DataHandler::createRdsFileContent(){
+    return this->artist + " " + this->settings->getRdsSeparator() + " " + this->name;
+}
+
+
+QString DataHandler::createMetaFileContent(){
+    return this->metaArtist+ " " + this->settings->getMetaSeparator() + " " + this->metaName;
+}
+
+
+void DataHandler::writeStringToFile(QString fileName, QString toWrite){
+    qDebug() << "creating output file " << fileName << "...";
+
+    QFile *outputFile = new QFile(fileName);
+    this->tryToOpenFile(outputFile, QIODevice::WriteOnly);
+
+    QTextStream out(outputFile);
+    out << toWrite;
+    outputFile->close();
+    qDebug() << "created successfully";
+}
+
+
+void DataHandler::createRecodedXML(){
+    qDebug() << "creating recoded XML";
     this->openReaderStream();
 
     this->recodedXML = new QFile(this->settings->getRecodedXmlPath());
-    if (!this->recodedXML->open(QIODevice::WriteOnly)){
-        throw this->settings->getErrorPrefix() + " Can't open output XML!";
-    }
+    this->tryToOpenFile(this->recodedXML, QIODevice::WriteOnly);
 
     this->writer = new QXmlStreamWriter(this->recodedXML);
+    const char* codecName = this->settings->getRecodedXmlEncoding();
     this->writer->setCodec(codecName);
 
-    this->reader->readNext();
-    this->writer->writeStartDocument(this->reader->documentVersion().toString());
-
-    while (!this->reader->atEnd()){
-        this->reader->readNext();
-        this->writer->writeCurrentToken(*this->reader);
-    }
+    this->writeRecodedXmlBeginning();
+    this->writeRecodedXmlContent();
 
     this->recodedXML->close();
     delete this->writer;
     delete this->recodedXML;
+    delete codecName;
     this->closeReaderStream();
+    qDebug() << "created successfully";
 }
 
 
-void DataHandler::openReaderStream(){
-    this->inputXML = new QFile(this->settings->getInputFilePath());
-    if (!this->inputXML->open(QIODevice::ReadOnly)){
-        throw this->settings->getErrorPrefix() + " Can't open input XML!";
-    }
-
-    this->reader = new QXmlStreamReader(this->inputXML);
-    if (this->reader->hasError()){
-        throw this->settings->getErrorPrefix() + " Input XML has errors!";
-    }
+void DataHandler::writeRecodedXmlBeginning(){
+    this->reader->readNext();
+    this->writer->writeStartDocument(this->reader->documentVersion().toString());
 }
 
 
-void DataHandler::closeReaderStream(){
-    this->inputXML->close();
-    delete this->reader;
-    delete this->inputXML;
-}
-
-
-QString DataHandler::getFirstTagContent(QString tagName){
+void DataHandler::writeRecodedXmlContent(){
     while (!this->reader->atEnd()){
         this->reader->readNext();
-        if (this->reader->name().toString() == tagName){
-            return this->reader->readElementText();
-        }
+        this->writer->writeCurrentToken(*this->reader);
     }
-    throw this->settings->getErrorPrefix() + " Can't find tag "
-                                      + tagName.toStdString() + "!";
 }
 
 
@@ -230,31 +263,46 @@ void DataHandler::uploadFileViaFtp(){
         return;
     }
 
-    QUrl uploadUrl(this->settings->getRootFtpUrl());
-    uploadUrl.setPath(this->settings->getFtpPath());
-    uploadUrl.setUserName(this->settings->getFtpLogin());
-    uploadUrl.setPassword(this->settings->getFtpPassword());
-    uploadUrl.setPort(21);
-
-    QNetworkAccessManager uploader;
-    QNetworkRequest uploadRequest(uploadUrl);
-    QNetworkReply *uploadReply;
+    QUrl uploadUrl = this->createUploadUrl();
+    qDebug() << "uploading file to " << uploadUrl;
 
     QString uploadingFileName = this->settings->getUploadingFilePath();
     QFile *uploadingFile = new QFile(uploadingFileName);
 
+    this->tryToOpenFile(uploadingFile, QIODevice::ReadOnly);
+    this->doSynchronousUpload(uploadingFile, uploadUrl);
+
+    uploadingFile->close();
+    delete uploadingFile;
+}
+
+
+QUrl DataHandler::createUploadUrl(){
+    QUrl url(this->settings->getRootFtpUrl());
+    url.setPath(this->settings->getFtpPath());
+    url.setUserName(this->settings->getFtpLogin());
+    url.setPassword(this->settings->getFtpPassword());
+    url.setPort(21);
+    return url;
+}
+
+
+void DataHandler::doSynchronousUpload(QFile *fileToUpload, QUrl uploadUrl){
+    QNetworkAccessManager uploader;
+    QNetworkRequest uploadRequest(uploadUrl);
+    QNetworkReply *uploadReply;
+
     QEventLoop synchronizationLoop;
 
-    if (uploadingFile->open(QIODevice::ReadOnly)) {
-        uploadReply = uploader.put(uploadRequest, uploadingFile);
+    uploadReply = uploader.put(uploadRequest, fileToUpload);
 
-        //make QNetworkAccess synchronous
-        QObject::connect(uploadReply, SIGNAL(finished()),
+    //make QNetworkAccess synchronous
+    QObject::connect(uploadReply, SIGNAL(finished()),
                          &synchronizationLoop, SLOT(quit()));
-        synchronizationLoop.exec();
-        uploadingFile->close();
-    }
-    else{
-        throw this->settings->getErrorPrefix() + " Can't open file for FTP transfer!";
-    }
+    QTimer::singleShot(5000, &synchronizationLoop, SLOT(quit()));
+
+    synchronizationLoop.exec();
+
+    qDebug() << "uploaded with reply error code " << uploadReply->error();
 }
+

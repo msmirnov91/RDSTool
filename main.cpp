@@ -14,8 +14,11 @@ int main(int argc, char *argv[]){
     defaultConf.set(el::Level::Error, el::ConfigurationType::Filename, "errors.log");
     el::Loggers::reconfigureLogger("default", defaultConf);
 
-    try{      
+    try{
         Settings settingsFromFile("settings.ini");
+        if (settingsFromFile.executionProhibited()){
+            return 0;
+        }
         DataHandler handler(&settingsFromFile);
 
         handler.readInputData();

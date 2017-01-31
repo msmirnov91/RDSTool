@@ -11,6 +11,7 @@ public:
     QString getInputFilePath();
     QString getRdsFilePath();
     QString getRecodedXmlPath();
+    const char* getRecodedXmlEncoding();
     QString getMetaFilePath();
     QString getRdsSeparator();
     QString getMetaSeparator();
@@ -23,7 +24,7 @@ public:
 
     std::string getErrorPrefix();
 
-    bool fileCreationProhibited(); /// checks if file may be changed in current time
+    bool executionProhibited(); /// checks if file may be changed in current time
     bool uploadProhibited();
 
 private:
@@ -31,6 +32,7 @@ private:
     QString inputFilePath;
     QString rdsFilePath;
     QString recodedXmlPath;
+    QString recodedXmlEncoding;
     QString metaFilePath;
     QString rdsSeparator;
     QString metaSeparator;
@@ -45,6 +47,9 @@ private:
     // various settings
     QString restrictedHoursForToday;
     QString errorPrefix;
+
+    QString getCurrentWeekDayName();
+    QString getCurrentHour();
 };
 
 #endif // CONFIGURATION_H
