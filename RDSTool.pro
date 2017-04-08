@@ -19,10 +19,22 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    settings.cpp \
-    datahandler.cpp
+    FtpUploader/ftpuploader.cpp \
+    FtpUploader/ftpuploadersettings.cpp \
+    FileMaker/filemaker.cpp \
+    FileMaker/filemakersettings.cpp \
+    TextReplacer/textreplacer.cpp \
+    TextReplacer/textreplacersettings.cpp \
+    mainsettings.cpp \
+    translator.cpp
 
 HEADERS += \
-    settings.h \
     easylogging++.h \
-    datahandler.h
+    FtpUploader/ftpuploader.h \
+    FtpUploader/ftpuploadersettings.h \
+    FileMaker/filemaker.h \
+    FileMaker/filemakersettings.h \
+    TextReplacer/textreplacer.h \
+    TextReplacer/textreplacersettings.h \
+    mainsettings.h \
+    translator.h

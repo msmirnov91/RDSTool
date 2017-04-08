@@ -1,7 +1,9 @@
 #include "QCoreApplication"
-#include "datahandler.h"
-#include "settings.h"
+#include "mainsettings.h"
 #include "easylogging++.h"
+#include "FileMaker/filemaker.h"
+#include "FtpUploader/ftpuploader.h"
+#include "translator.h"
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -15,18 +17,25 @@ int main(int argc, char *argv[]){
     el::Loggers::reconfigureLogger("default", defaultConf);
 
     try{
-        Settings settingsFromFile("settings.ini");
-        if (settingsFromFile.executionProhibited()){
+        MainSettings mainSettings;
+        if (mainSettings.executionProhibited()){
             return 0;
         }
-        DataHandler handler(&settingsFromFile);
 
-        handler.readInputData();
-        if (handler.translationIsNecessary()){
-            handler.translate();
-        }
-        handler.createOutputFiles();
-        handler.uploadFileViaFtp();
+        FileMaker maker;
+        Translator translator;
+        FtpUploader uploader;
+
+        maker.readInputData();
+
+        QString newName = translator.translate(maker.getName());
+        QString newArtist = translator.translate(maker.getArtist());
+
+        maker.setName(newName);
+        maker.setArtist(newArtist);
+
+        maker.createOutputFiles();
+        uploader.uploadFileViaFtp();
     }
     catch (std::string str){
         LOG(ERROR) << str;
