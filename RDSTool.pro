@@ -26,8 +26,8 @@ SOURCES += main.cpp \
     TextReplacer/textreplacer.cpp \
     TextReplacer/textreplacersettings.cpp \
     mainsettings.cpp \
-    translator.cpp \
-    data.cpp
+    data.cpp \
+    Translator/translator.cpp
 
 HEADERS += \
     easylogging++.h \
@@ -38,5 +38,5 @@ HEADERS += \
     TextReplacer/textreplacer.h \
     TextReplacer/textreplacersettings.h \
     mainsettings.h \
-    translator.h \
-    data.h
+    data.h \
+    Translator/translator.h

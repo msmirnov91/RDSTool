@@ -5,7 +5,7 @@
 #include "FileMaker/filemaker.h"
 #include "FtpUploader/ftpuploader.h"
 #include "TextReplacer/textreplacer.h"
-#include "translator.h"
+#include "Translator/translator.h"
 
 
 class Data

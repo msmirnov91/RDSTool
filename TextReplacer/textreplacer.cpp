@@ -20,11 +20,11 @@ QString TextReplacer::replaceAllOccurancesIn(QString string){
         return string;
     }
 
+    qDebug() << "Replacing...";
     for (int i = 0; i < amountOfReplacementPairs; i++){
         QString what = settings->getReplaceWhat(i);
         QString withWhat = settings->getReplaceWithWhat(i);
 
-        qDebug() << "Replacing...";
         string.replace(what, withWhat);
     }
 
