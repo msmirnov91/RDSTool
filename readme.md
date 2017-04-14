@@ -40,9 +40,9 @@ sun=7
 >[ExceptionPrefix]  
 prefix=ACHTUNG!  
 
->[Replacement0]
-replaceWhat=DDT
-replaceWithWhat=U.Shevchuk
+>[Replacement0]  
+replaceWhat=DDT  
+replaceWithWhat=U.Shevchuk  
 
 В секции MainSettings указываются имена файлов, с которыми работает программа, разделители для выходных файлов а также кодировка, в которой будет создан перекодированный XML. Список возможных вариантов этого параметра приведен [здесь](http://doc.qt.io/qt-5/qtextcodec.html#details).  
 В секции FTPSettings указываются параметры доступа к серверу, на который будет выгружен файл. За то, какой именно файл будет выгружен, отвечает параметр fileToUpload. Функцию выгрузки файла можно отменить, раскомментировав строку doUpload=false.  
