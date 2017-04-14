@@ -22,12 +22,12 @@ FileMaker::~FileMaker(){
 
 
 QString FileMaker::getName(){
-    return this->name;
+    return name;
 }
 
 
 QString FileMaker::getArtist(){
-    return this->artist;
+    return artist;
 }
 
 
@@ -38,6 +38,26 @@ void FileMaker::setName(QString name){
 
 void FileMaker::setArtist(QString artist){
     this->artist = artist;
+}
+
+
+QString FileMaker::getMetaName(){
+    return metaName;
+}
+
+
+QString FileMaker::getMetaArtist(){
+    return metaArtist;
+}
+
+
+void FileMaker::setMetaName(QString metaName){
+    this->metaName = metaName;
+}
+
+
+void FileMaker::setMetaArtist(QString metaArtist){
+    this->metaArtist = metaArtist;
 }
 
 

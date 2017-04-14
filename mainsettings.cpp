@@ -8,6 +8,7 @@
 MainSettings::MainSettings(){
     qDebug() << "initialize settings";
     settings = new QSettings("settings.ini", QSettings::IniFormat);
+    settings->setIniCodec("UTF-8");
 
     QString weekDayName = this->getCurrentWeekDayName();
     // read time settings

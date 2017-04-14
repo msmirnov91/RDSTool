@@ -1,11 +1,13 @@
 #include "ftpuploader.h"
 #include "QTimer"
 #include "QEventLoop"
+#include "QDebug"
 #include <QtNetwork>
 #include <exception>
 
 
 FtpUploader::FtpUploader(){
+    qDebug() << "initialize FtpUploader";
     settings = new FtpUploaderSettings();
 }
 
@@ -21,9 +23,10 @@ void FtpUploader::uploadFileViaFtp(){
     }
 
     QUrl uploadUrl = this->createUploadUrl();
-    qDebug() << "uploading file to " << uploadUrl;
 
     QString uploadingFileName = this->settings->getUploadingFilePath();
+    qDebug() << "uploading file " << uploadingFileName << " to " << uploadUrl;
+
     QFile *uploadingFile = new QFile(uploadingFileName);
 
     this->tryToOpenFile(uploadingFile, QIODevice::ReadOnly);

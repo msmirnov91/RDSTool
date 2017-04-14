@@ -3,6 +3,7 @@
 #include "easylogging++.h"
 #include "FileMaker/filemaker.h"
 #include "FtpUploader/ftpuploader.h"
+#include "TextReplacer/textreplacer.h"
 #include "translator.h"
 
 INITIALIZE_EASYLOGGINGPP
@@ -25,14 +26,33 @@ int main(int argc, char *argv[]){
         FileMaker maker;
         Translator translator;
         FtpUploader uploader;
+        TextReplacer replacer;
 
         maker.readInputData();
 
-        QString newName = translator.translate(maker.getName());
-        QString newArtist = translator.translate(maker.getArtist());
+        // get data
+        QString name = maker.getName();
+        QString artist = maker.getArtist();
+        QString metaName = maker.getMetaName();
+        QString metaArtist = maker.getMetaArtist();
 
-        maker.setName(newName);
-        maker.setArtist(newArtist);
+        // replacing strings in name and artist
+        name = replacer.replaceAllOccurancesIn(name);
+        artist = replacer.replaceAllOccurancesIn(artist);
+
+        // replacing strings in metaName and metaArtist
+        metaName = replacer.replaceAllOccurancesIn(metaName);
+        metaArtist = replacer.replaceAllOccurancesIn(metaArtist);
+
+        // translating name and arist
+        name = translator.translate(name);
+        artist = translator.translate(artist);
+
+        // store data
+        maker.setName(name);
+        maker.setArtist(artist);
+        maker.setMetaName(metaName);
+        maker.setMetaArtist(metaArtist);
 
         maker.createOutputFiles();
         uploader.uploadFileViaFtp();

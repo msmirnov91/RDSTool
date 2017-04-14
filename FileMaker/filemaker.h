@@ -51,6 +51,12 @@ public:
 
     void setName(QString);
     void setArtist(QString);
+
+    QString getMetaName();
+    QString getMetaArtist();
+
+    void setMetaName(QString);
+    void setMetaArtist(QString);
 };
 
 #endif // FILEMAKER_H

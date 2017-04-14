@@ -73,8 +73,8 @@ Translator::Translator(){
 
 
 QString Translator::translate(QString text){
-    qDebug() << "translating...";
     if (hasRussianLetters(text)){
+        qDebug() << "Translating...";
         return translateString(text);
     }
     else{
