@@ -1,10 +1,7 @@
 #include "QCoreApplication"
 #include "mainsettings.h"
 #include "easylogging++.h"
-#include "FileMaker/filemaker.h"
-#include "FtpUploader/ftpuploader.h"
-#include "TextReplacer/textreplacer.h"
-#include "translator.h"
+#include "data.h"
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -27,32 +24,14 @@ int main(int argc, char *argv[]){
         Translator translator;
         FtpUploader uploader;
         TextReplacer replacer;
+        Data namesAndArtists;
 
         maker.readInputData();
 
-        // get data
-        QString name = maker.getName();
-        QString artist = maker.getArtist();
-        QString metaName = maker.getMetaName();
-        QString metaArtist = maker.getMetaArtist();
-
-        // replacing strings in name and artist
-        name = replacer.replaceAllOccurancesIn(name);
-        artist = replacer.replaceAllOccurancesIn(artist);
-
-        // replacing strings in metaName and metaArtist
-        metaName = replacer.replaceAllOccurancesIn(metaName);
-        metaArtist = replacer.replaceAllOccurancesIn(metaArtist);
-
-        // translating name and arist
-        name = translator.translate(name);
-        artist = translator.translate(artist);
-
-        // store data
-        maker.setName(name);
-        maker.setArtist(artist);
-        maker.setMetaName(metaName);
-        maker.setMetaArtist(metaArtist);
+        namesAndArtists.initialize(maker);
+        namesAndArtists.replace(replacer);
+        namesAndArtists.translate(translator);
+        namesAndArtists.store(maker);
 
         maker.createOutputFiles();
         uploader.uploadFileViaFtp();
